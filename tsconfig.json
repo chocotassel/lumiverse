@@ -1,38 +1,37 @@
 {
-    "compilerOptions": {
-      "target": "ES6",
-      "module": "esnext",
-      "lib": [
-        "es2017",
-        "dom"
-      ],
-      "declaration": true,
-      "removeComments": false,
-      "noEmit": false,
-      "moduleResolution": "node",
-      "outDir": "dist",
-      "skipLibCheck": true,
-      "emitDeclarationOnly": false,
-      "resolveJsonModule": true,
-      "noEmitOnError": false,
-      "sourceMap": true,
-      "emitDecoratorMetadata": true,
-      "experimentalDecorators": true,
-      "allowSyntheticDefaultImports": true,
-      "types": [
-        "node",
-        "mocha"
-      ],
-      "typeRoots": [
-        "./node_modules/@types"
-      ]
-    },
-    "exclude": [
-      "node_modules",
-      "wwwroot",
-      "temp",
-      "dist",
-      "test"
-    ]
-  }
-  
+	"compilerOptions": {
+		"target": "ES6",
+		"module": "esnext",
+		"lib": [
+			"es2017",
+			"dom"
+		],
+		"declaration": true,
+		"removeComments": false,
+		"noEmit": false,
+		"moduleResolution": "node",
+		"outDir": "dist",
+		"skipLibCheck": true,
+		"emitDeclarationOnly": false,
+		"resolveJsonModule": true,
+		"noEmitOnError": false,
+		"sourceMap": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"allowSyntheticDefaultImports": true,
+		"types": [
+			"node",
+			"mocha"
+		],
+		"typeRoots": [
+			"./node_modules/@types"
+		]
+	},
+	"exclude": [
+		"node_modules",
+		"wwwroot",
+		"temp",
+		"dist",
+		"test"
+	]
+}
