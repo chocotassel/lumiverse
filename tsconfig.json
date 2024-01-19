@@ -19,19 +19,9 @@
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"allowSyntheticDefaultImports": true,
-		"types": [
-			"node",
-			"mocha"
-		],
-		"typeRoots": [
-			"./node_modules/@types"
-		]
+		"typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types"],
 	},
 	"exclude": [
-		"node_modules",
-		"wwwroot",
-		"temp",
 		"dist",
-		"test"
 	]
 }

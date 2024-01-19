@@ -1,7 +1,11 @@
+import Renderer from "../renderer/Renderer";
+import { Scene } from "../scenes";
+import { EngineConfigOptions } from "./type";
+
 // Engine.js
-class Engine {
-    renderer: null;
-    scene: null;
+export default class Engine {
+    renderer: Renderer;
+    scene: Scene;
     running: boolean;
     
     constructor() {
@@ -12,12 +16,13 @@ class Engine {
     }
 
     // 初始化引擎
-    init() {
+    init(options: EngineConfigOptions) {
         // 创建并初始化 Renderer 和 Scene 对象
-        // 例如：this.renderer = new Renderer();
-        //       this.scene = new Scene();
+        this.renderer = new Renderer();
+        this.scene = new Scene();
 
         // 其他初始化代码...
+        this.renderer.init(options.canvas);
     }
 
     // 开始渲染循环
@@ -57,5 +62,3 @@ class Engine {
         this.running = false;
     }
 }
-
-export default Engine;
