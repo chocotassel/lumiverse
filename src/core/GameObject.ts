@@ -1,9 +1,10 @@
+import Component from "./Component";
 import { Transform } from "./type";
 
 export default class GameObject {
     name: Symbol;
     transform: Transform;
-    components: Map<any, any>;
+    components: Map<Symbol, Component>;
     enabled: boolean;
 
     constructor(name) {

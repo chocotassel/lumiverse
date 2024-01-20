@@ -1,6 +1,8 @@
-import Component from "../core/Components";
+import Component from "../core/Component";
 
 export default class Light extends Component {
+    readonly name = "Light";
+
     type: string;
     color: string;
     intensity: number;

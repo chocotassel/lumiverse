@@ -195,11 +195,29 @@ class Renderer {
 
     drawObject(renderPass: GPURenderPassEncoder, obj: GameObject) {
         // 绘制对象
+		const uniformBufferSize = 64 
+		const mat4Buffer = this.device.createBuffer({
+			label: 'affine matrix',
+			size: uniformBufferSize,
+			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+		});
+		const bindGroup = this.device.createBindGroup({
+			layout: this.pipeline.getBindGroupLayout(0),
+			entries: [{
+				binding: 0,
+				resource: { buffer: mat4Buffer },
+			}],
+		})
         renderPass.setPipeline(this.pipeline);
 		renderPass.setBindGroup(0, bindGroup);
-		renderPass.setVertexBuffer(0, verticesBuffer);
-		renderPass.setIndexBuffer(indicesBuffer, 'uint16');
-		renderPass.drawIndexed(indicesLength);
+        obj.components.forEach(component => {
+            if (component.enabled && component.name === "Mesh") {
+                // component.render();
+                // renderPass.setVertexBuffer(0, verticesBuffer);
+                // renderPass.setIndexBuffer(indicesBuffer, 'uint16');
+                // renderPass.drawIndexed(indicesLength);
+            }
+        })
     }
 
 }

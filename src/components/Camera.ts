@@ -1,6 +1,8 @@
-import Component from "../core/Components";
+import Component from "../core/Component";
 
 export default class Camera extends Component {
+    readonly name = "Camera";
+
     fieldOfView: number;
     nearClipPlane: number;
     farClipPlane: number;
