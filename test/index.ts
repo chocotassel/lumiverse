@@ -20,7 +20,7 @@ mat4.multiply(am, pm, vm);
 // 仿射矩阵
 let affineMatrix = new Float32Array(am);
 
-// 顶点和索引
+// 物体顶点和索引
 const vertices = new Float32Array([
     0.5, 0.5, 0, 
     0.5, -0.5, -0.5, 
@@ -28,6 +28,13 @@ const vertices = new Float32Array([
     -0.5, -0.5, 0,
 ]);
 const indices = new Uint16Array([0, 1, 2, 0, 2, 3, 0, 3, 1, 1, 3, 2]);
+
+// 灯光
+const pointLight = {
+    position: vec3.fromValues(0, 1, 0),
+    color: vec3.fromValues(1, 1, 1),
+    intensity: 1.0,
+};
 
 
 // mouse event
@@ -104,16 +111,49 @@ async function main() {
 
     // 创建着色器
     const shaderCode = `
+    struct PointLight {
+        position: vec3<f32>,
+        color: vec3<f32>,
+        intensity: f32,
+        viewPos: vec3<f32>,
+        _padding3: vec2<f32>,
+    };
+    struct VertexOutput {
+        @builtin(position) position: vec4<f32>,
+        @location(0) fragPos: vec3<f32>,
+        @location(1) normal: vec3<f32>,
+    };
+    
     @group(0) @binding(0) var<uniform> matrix: mat4x4<f32>;
+    @group(0) @binding(1) var<uniform> pointLight: PointLight;
+    // @group(0) @binding(2) var<uniform> viewPos: vec3<f32>;
 
     @vertex
-    fn vs_main(@location(0) position: vec3<f32>) -> @builtin(position) vec4<f32> {
-        return matrix * vec4<f32>(position, 1.0);
+    fn vs_main(@location(0) position: vec3<f32>, @location(1) normal: vec3<f32>) -> VertexOutput {
+        var output: VertexOutput;
+        var transPosition = matrix * vec4<f32>(position, 1.0);
+        output.position = transPosition;
+        output.fragPos = transPosition.xyz;
+        output.normal = normal;
+        return output;
     }
 
     @fragment
-    fn fs_main() -> @location(0) vec4<f32> {
-        return vec4<f32>(1.0, 1.0, 1.0, 1.0);
+    fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
+        var norm = normalize(input.normal);
+        var lightDir = normalize(pointLight.position - input.fragPos);
+        var diff = max(dot(norm, lightDir), 0.0);
+        var reflectDir = reflect(-lightDir, norm);
+        var viewDir = normalize(pointLight.viewPos - input.fragPos);
+        var spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
+
+        var ambient = pointLight.color * 0.1;
+        var diffuse = pointLight.color * diff;
+        var specular = pointLight.color * spec;
+        var color = ambient + diffuse + specular;
+        color *= pointLight.intensity;
+    
+        return vec4<f32>(1, 1,1, 1.0);
     }
     `
     const cellShaderModule = device.createShaderModule({
@@ -124,18 +164,49 @@ async function main() {
 
     // 创建渲染管道
     const format: GPUTextureFormat = 'bgra8unorm';
+    const bindGroupLayout = device.createBindGroupLayout({
+        entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.VERTEX,
+                buffer: {
+                    type: 'uniform',
+                },
+            }, {
+                binding: 1,
+                visibility: GPUShaderStage.FRAGMENT,
+                buffer: {
+                    type: 'uniform',
+                },
+            // }, {
+            //     binding: 2,
+            //     visibility: GPUShaderStage.FRAGMENT,
+            //     buffer: {
+            //         type: 'uniform',
+            //     },
+            }
+        ],
+    });
+    
     const pipeline = device.createRenderPipeline({
         label: 'render pipeline',
-        layout: 'auto',
+        layout: device.createPipelineLayout({
+            bindGroupLayouts: [bindGroupLayout],
+        }),
         vertex: {
             module: cellShaderModule,
             entryPoint: 'vs_main',
             buffers: [{
-                arrayStride: 3 * 4,  // size of float32 is 4 bytes
+                arrayStride: 6 * 4,  // 假设位置和法线各占3个float32
                 attributes: [{
                     // position
                     shaderLocation: 0,
                     offset: 0,
+                    format: 'float32x3'
+                }, {
+                    // normal
+                    shaderLocation: 1,
+                    offset: 3 * 4,  // 紧接着位置数据后的偏移
                     format: 'float32x3'
                 }],
             }],
@@ -176,21 +247,62 @@ async function main() {
 
     // 渲染循环
     function draw() {
+        // 绑定组
 		const uniformBufferSize = 64 
 		const mat4Buffer = device.createBuffer({
 			label: 'affine matrix',
 			size: uniformBufferSize,
 			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
 		});
-		const bindGroup = device.createBindGroup({
-			layout: pipeline.getBindGroupLayout(0),
-			entries: [{
-				binding: 0,
-				resource: { buffer: mat4Buffer },
-			}],
-		})
 		device.queue.writeBuffer(mat4Buffer, 0, affineMatrix)
 
+        // 点光源数据
+        const pointLightData = new Float32Array([
+            pointLight.position[0], pointLight.position[1], pointLight.position[2], 
+            pointLight.color[0], pointLight.color[1], pointLight.color[2],
+            pointLight.intensity,
+            ...cameraPosition
+        ]);
+        const pointLightBuffer = device.createBuffer({
+            size: 64,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+            mappedAtCreation: true
+        });
+        new Float32Array(pointLightBuffer.getMappedRange()).set(pointLightData);
+        pointLightBuffer.unmap();
+
+        // camera
+        // const viewPosBuffer = device.createBuffer({
+        //     size: 12, // vec3 的大小（3个4字节的浮点数）
+        //     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        // });
+        
+        // device.queue.writeBuffer(viewPosBuffer, 0, new Float32Array(cameraPosition))
+
+        //
+		const bindGroup = device.createBindGroup({
+			layout: pipeline.getBindGroupLayout(0),
+			entries: [
+                {
+                    binding: 0,
+                    resource: { 
+                        buffer: mat4Buffer 
+                    },
+                }, {
+                    binding: 1,
+                    resource: {
+                        buffer: pointLightBuffer,
+                    },
+                // }, {
+                //     binding: 2,
+                //     resource: {
+                //         buffer: viewPosBuffer,
+                //     },
+                },
+            ],
+		})
+
+        // 创建渲染命令 
         const commandEncoder = device.createCommandEncoder();
         const textureView = ctx.getCurrentTexture().createView();
         const depthTexture = device.createTexture({
