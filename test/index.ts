@@ -21,11 +21,12 @@ mat4.multiply(am, pm, vm);
 let affineMatrix = new Float32Array(am);
 
 // 物体顶点和索引
+const q6 = Math.sqrt(6);
 const vertices = new Float32Array([
-    0.5, 0.5, 0, 
-    0.5, -0.5, -0.5, 
-    0.5, -0.5, 0.5,
-    -0.5, -0.5, 0,
+    0.5, 0.5, 0, q6 - 2, 2, 0,
+    0.5, -0.5, -0.5, q6 - 1, q6 + 1, -2,
+    0.5, -0.5, 0.5, q6 - 1, q6 + 1, 2,
+    -0.5, -0.5, 0, -2, q6+2, 0,
 ]);
 const indices = new Uint16Array([0, 1, 2, 0, 2, 3, 0, 3, 1, 1, 3, 2]);
 
@@ -126,7 +127,6 @@ async function main() {
     
     @group(0) @binding(0) var<uniform> matrix: mat4x4<f32>;
     @group(0) @binding(1) var<uniform> pointLight: PointLight;
-    // @group(0) @binding(2) var<uniform> viewPos: vec3<f32>;
 
     @vertex
     fn vs_main(@location(0) position: vec3<f32>, @location(1) normal: vec3<f32>) -> VertexOutput {
@@ -153,7 +153,7 @@ async function main() {
         var color = ambient + diffuse + specular;
         color *= pointLight.intensity;
     
-        return vec4<f32>(1, 1,1, 1.0);
+        return vec4<f32>(color, 1.0);
     }
     `
     const cellShaderModule = device.createShaderModule({
@@ -178,12 +178,6 @@ async function main() {
                 buffer: {
                     type: 'uniform',
                 },
-            // }, {
-            //     binding: 2,
-            //     visibility: GPUShaderStage.FRAGMENT,
-            //     buffer: {
-            //         type: 'uniform',
-            //     },
             }
         ],
     });
@@ -271,14 +265,6 @@ async function main() {
         new Float32Array(pointLightBuffer.getMappedRange()).set(pointLightData);
         pointLightBuffer.unmap();
 
-        // camera
-        // const viewPosBuffer = device.createBuffer({
-        //     size: 12, // vec3 的大小（3个4字节的浮点数）
-        //     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        // });
-        
-        // device.queue.writeBuffer(viewPosBuffer, 0, new Float32Array(cameraPosition))
-
         //
 		const bindGroup = device.createBindGroup({
 			layout: pipeline.getBindGroupLayout(0),
@@ -293,11 +279,6 @@ async function main() {
                     resource: {
                         buffer: pointLightBuffer,
                     },
-                // }, {
-                //     binding: 2,
-                //     resource: {
-                //         buffer: viewPosBuffer,
-                //     },
                 },
             ],
 		})

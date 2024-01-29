@@ -12,8 +12,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@predy-js/player": "^0.1.6",
+    "@predy-js/specification": "^0.1.6",
     "@webgpu/types": "^0.1.40",
     "gl-matrix": "^3.4.3",
+    "mp4box": "^0.5.2",
     "rollup-plugin-server": "^0.7.0",
     "tslib": "^2.6.2",
     "webgpu": "^0.1.16"

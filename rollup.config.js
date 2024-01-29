@@ -6,7 +6,7 @@ import server from 'rollup-plugin-server';
 
 export default function(commmandLineArgs) {
   const ret = {
-    input: 'test/index.ts', // 你的入口文件
+    input: 'test/mp4test.ts', // 你的入口文件
     output: {
       file: 'test/dist/bundle.js', // 输出的文件
       format: 'esm', // 输出格式，这里使用 CommonJS，你也可以选择其他格式，如 'esm'（ES模块）
